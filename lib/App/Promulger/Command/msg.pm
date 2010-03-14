@@ -16,7 +16,7 @@ sub run {
     local $/;
     <STDIN>
   };
-  Promulger::Dispatch::dispatch($message, $self->{config});
+  Promulger::Dispatch::dispatch($message);
 }
 
 1;

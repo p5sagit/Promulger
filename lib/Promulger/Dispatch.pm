@@ -8,8 +8,12 @@ use Email::Simple;
 use Email::Sender::Simple qw(sendmail);
 use Mail::Verp;
 
+use Promulger::Config;
+
+# XXX no bounce parsing yet -- apeiron, 2010-03-13 
 sub dispatch {
-  my($message, $config) = @_;
+  my($message) = @_;
+  my $config = Promulger::Config->config;
 
   my $email = Email::Simple->new($message);
   my $recipient = $email->header('To');
@@ -30,14 +34,14 @@ sub dispatch {
 }
 
 sub handle_request {
-  my ($list, $sender, $recipient, $subject, $config) = @_;
+  my ($list, $sender, $recipient, $subject) = @_;
 
   if($subject =~ /^subscribe/i) {
-    $list->subscribe($sender, $config) 
-      or already_subscribed($list, $sender, $config);
+    $list->subscribe($sender) 
+      or already_subscribed($list, $sender);
   } elsif($subject =~ /^unsubscribe/i) {
-    $list->unsubscribe($sender, $config) 
-      or not_subscribed($list, $sender, $config);
+    $list->unsubscribe($sender) 
+      or not_subscribed($list, $sender);
   }
 }
 
@@ -73,8 +77,52 @@ sub post_message {
   }
 }
 
-sub reject {}
-sub not_subscribed {}
-sub already_subscribed {}
+# XXX make this actually not suck -- apeiron, 2010-03-13 
+sub reject {
+  my($recipient, $sender) = @_;
+  my $email = Email::Simple->create(
+    header => [
+      From => $recipient,
+      To   => $sender,
+      Subject => 'Rejected',
+    ],
+    body => <<BODY,
+Sorry, your message to $recipient has been denied.
+BODY
+  );
+  sendmail($email);
+}
+
+sub not_subscribed {
+  my($list, $sender) = @_;
+  my $list_address = $list->address;
+  my $email = Email::Simple->create(
+    header => [
+      From => $list->admin_address,
+      To   => $sender,
+      Subject => 'Not subscribed',
+    ],
+    body => <<BODY,
+Sorry, you are not subscribed to $list_address;
+BODY
+  );
+  sendmail($email);
+}
+
+sub already_subscribed {
+  my($list, $sender) = @_;
+  my $list_address = $list->address;
+  my $email = Email::Simple->create(
+    header => [
+      From => $list->admin_address,
+      To   => $sender,
+      Subject => 'Already subscribed',
+    ],
+    body => <<BODY,
+Sorry, you are already subscribed to $list_address;
+BODY
+  );
+  sendmail($email);
+}
 
 'http://www.shadowcat.co.uk/blog/matt-s-trout/oh-subdispatch-oh-subdispatch/';
