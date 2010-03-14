@@ -3,9 +3,7 @@ use strict;
 use warnings;
 
 use App::Promulger -command;
-use Promulger::Schema;
 use Promulger::List;
-
 use Config::General;
 
 sub abstract {
@@ -33,17 +31,17 @@ sub validate_args {
   }
 
   $self->{config} = { Config::General->new($cf)->getall };
-  @$args == 1 or die "pmg newlist needs a list name\n";
+  $self->{config}{config_file} = $cf;
 }
+
 
 sub run {
   my ($self, $opt, $args) = @_;
-  Promulger::Schema->connect($self->{config}{store});
+  @$args == 1 or die "pmg newlist needs a list name\n";
   my $list = Promulger::List->new(
     listname  => $args->[0],
   );
-  $list->setup_aliases_at($self->{config});
-  Promulger::Schema->store($list);
+  $list->setup($self->{config});
 }
 
 1;
