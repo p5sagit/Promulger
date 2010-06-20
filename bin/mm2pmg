@@ -1,0 +1,20 @@
+#!/usr/bin/perl
+use strict;
+use warnings;
+
+use Promulger::List;
+
+use IPC::Run3;
+
+@ARGV == 2 or die "usage: $0 mailman_list_name pmg_list_name";
+my ($mm_list_name, $pmg_list_name) = @ARGV;
+my $pmg_list = Promulger::List->resolve($pmg_list_name);
+die "no such list: $pmg_list_name\n" unless $pmg_list;
+
+run3 ['list_members', $mm_list_name], undef, \&add_member, undef;
+
+sub add_member {
+  my ($member) = @_;
+  chomp $member;
+  $pmg_list->subscribe($member);
+}
