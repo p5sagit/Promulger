@@ -26,8 +26,7 @@ sub validate_args {
     die "Config file $cf not readable\n";
   }
 
-  Promulger::Config->config({ Config::General->new($cf)->getall });
-  Promulger::Config->config->{config}{config_file} = $cf;
+  Promulger::Config->load_config($cf);
 }
 
 1;

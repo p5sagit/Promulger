@@ -19,4 +19,4 @@ sub run {
   Promulger::Dispatch::dispatch($message);
 }
 
-1;
+'Engage';

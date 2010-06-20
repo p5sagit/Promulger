@@ -12,10 +12,12 @@ sub abstract {
 sub run {
   my ($self, $opt, $args) = @_;
   @$args == 1 or die "pmg newlist needs a list name\n";
+  
+  my $listname = $args->[0];
   my $list = Promulger::List->new(
-    listname  => $args->[0],
+    listname  => $listname,
   );
   $list->setup;
 }
 
-1;
+'Make it so';
