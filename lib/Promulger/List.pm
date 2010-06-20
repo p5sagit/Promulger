@@ -48,22 +48,24 @@ sub resolve {
 
 sub subscribe {
   my ($self, $new) = @_;
-  return if $self->subscribers->at($new);
-  $self->subscribers->put($new, 1);
-  $self->store(find_path_for($self->name));
+  return if $self->subscribers->{$new};
+  $self->subscribers->{$new} = 1;
+  $self->store(find_path_for($self->listname)->stringify);
+  return 1;
 }
 
 sub unsubscribe {
   my ($self, $ex) = @_;
-  return unless $self->subscribers->at($ex);
-  $self->subscribers->delete($ex);
-  $self->store(find_path_for($self->name));
+  return unless exists $self->subscribers->{$ex};
+  delete $self->subscribers->{$ex};
+  $self->store(find_path_for($self->listname)->stringify);
+  return 1;
 }
 
 # XXX implement ACLs and other shinies -- apeiron, 2010-03-13 
 sub accept_posts_from {
   my ($self, $sender) = @_;
-  return grep { $sender eq $_ } @{$self->subscribers};
+  return grep { $sender eq $_ } keys %{$self->subscribers};
 }
 
 sub setup {
@@ -102,7 +104,7 @@ sub delete {
     $_ !~ /^$list_aliases[1]:/
   } @aliases;
 
-  unlink find_path_for($self->listname);
+  unlink find_path_for($self->listname)->stringify;
 }
 
 sub find_path_for {
