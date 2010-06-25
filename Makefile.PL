@@ -8,6 +8,7 @@ all_from 'lib/Promulger.pm';
 requires 'App::Cmd';
 requires 'Carp';
 requires 'Config::General';
+requires 'IPC::System::Simple';
 requires 'Email::Simple';
 requires 'Email::Address';
 requires 'Email::Sender';
@@ -16,10 +17,16 @@ requires 'IPC::Run3';
 # requires 'Mail::Verp'; # not yet
 requires 'Moose';
 requires 'MooseX::Storage';
+requires 'JSON::Any';
 requires 'Path::Class';
 requires 'Tie::File';
 requires 'autodie';
 requires 'parent';
+
+install_script (qw|
+  script/pmg
+  script/mm2pmg
+|);
 
 resources 'IRC'         => 'irc://irc.perl.org/#promulger';
 resources 'license'     => 'http://dev.perl.org/licenses/';

@@ -7,7 +7,8 @@ use Email::Simple;
 # XXX allow the user to specify their own Email::Sender::Transport -- apeiron,
 # 2010-03-13 
 use Email::Sender::Simple qw(sendmail);
-use Mail::Verp;
+# XXX not yet -- apeiron, 2010-06-25 
+#use Mail::Verp;
 
 use Promulger::Config;
 
