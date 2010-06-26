@@ -75,9 +75,10 @@ sub post_message {
     # 2010-03-13 
     my $new_message = Email::Simple->create(
       header => [
-        From => $sender_address,
-        To   => $subscriber,
-        Subject => $email->header('Subject'),
+        From       => $sender_address,
+        To         => $subscriber,
+        Subject    => $email->header('Subject'),
+        'Reply-to' => $recipient,
       ],
       body => $body,
     );
