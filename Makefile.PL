@@ -15,9 +15,7 @@ requires 'Email::Sender';
 requires 'Fcntl';
 requires 'IPC::Run3';
 # requires 'Mail::Verp'; # not yet
-requires 'Moose';
-requires 'MooseX::Storage';
-requires 'JSON::Any';
+requires 'Moo';
 requires 'Path::Class';
 requires 'Tie::File';
 requires 'autodie';
@@ -31,6 +29,8 @@ install_script (qw|
 resources 'IRC'         => 'irc://irc.perl.org/#promulger';
 resources 'license'     => 'http://dev.perl.org/licenses/';
 resources 'repository'  => 'git://git.shadowcat.co.uk/p5sagit/Promulger.git';
+
+auto_install();
 
 WriteAll();
 

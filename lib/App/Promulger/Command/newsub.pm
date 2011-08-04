@@ -16,9 +16,7 @@ sub run {
   my $listname = $args->[0];
   my $list = Promulger::List->resolve($listname);
 
-  if($list) {
-    $list->delete;
-  } else {
+  if(!$list) {
     die "$listname doesn't exist\n";
   }
 

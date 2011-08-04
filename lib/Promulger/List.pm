@@ -1,38 +1,35 @@
 package Promulger::List;
-use Moose;
-use MooseX::Storage;
+use Moo;
 
 use autodie ':all';
 use Carp;
 use Path::Class;
 use Fcntl ':flock';
 use Tie::File;
+use File::Slurp qw/read_file, write_file/;
+use Data::Dumper;
+$Data::Dumper::Purity = 1;
 
 use Promulger::Config;
 
 has listname => (
   is       => 'ro',
-  isa      => 'Str',
+  isa      => sub { $_[0] =~ /^\w+$/ or die "listname must be a string" },
   required => 1,
 );
 
 has active => (
   is       => 'rw',
-  isa      => 'Bool',
+  isa      => sub { ($_[0] == 0 || $_[0] == 1) or die "active must be 0 or 1" },
   required => 1,
-  default  => 1,
+  default  => sub { 1 },
 );
 
 has subscribers => (
   is       => 'rw',
-  isa      => 'HashRef',
+  isa      => sub { ref $_[0] eq 'HASH' or die "subscribers must be a hashref" },
   required => 1,
   default  => sub { {} },
-);
-
-with Storage (
-  format => 'JSON',
-  io     => 'File',
 );
 
 sub resolve {
@@ -111,6 +108,17 @@ sub find_path_for {
   my ($proto) = @_;
   my $path = file(Promulger::Config->config->{list_home}, $proto . ".list");
   return $path;
+}
+
+sub store {
+  my ($self, $path) = @_;
+  my $dumped = 'do { my '. Dumper($self) . '; $VAR1; }';
+  write_file($path, $dumped);
+}
+
+sub load {
+  my ($class, $path) = @_;
+  return do $path;
 }
 
 'http://mitpress.mit.edu/sicp/';
