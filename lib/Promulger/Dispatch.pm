@@ -3,7 +3,7 @@ use strict;
 use warnings;
 
 use Email::Address;
-use Email::Simple;
+use Email::MIME;
 # XXX allow the user to specify their own Email::Sender::Transport -- apeiron,
 # 2010-03-13 
 use Email::Sender::Simple qw(sendmail);
@@ -17,11 +17,11 @@ sub dispatch {
   my ($message) = @_;
   my $config = Promulger::Config->config;
 
-  my $email = Email::Simple->new($message);
-  my $recipient = $email->header('To');
+  my $email = Email::MIME->new($message);
+  my $recipient = $email->header_str('To');
   my $local_user = user_for_address($recipient);
-  my $sender = $email->header('From');
-  my $subject = $email->header('Subject');
+  my $sender = $email->header_str('From');
+  my $subject = $email->header_str('Subject');
 
   my $list = Promulger::List->resolve($local_user);
   unless($list) {
@@ -55,9 +55,9 @@ sub handle_request {
 sub post_message {
   my ($list, $email, $config) = @_;
 
-  my $sender = $email->header('From');
+  my $sender = $email->header_str('From');
   my $sender_address = bare_address($sender);
-  my $recipient = $email->header('To');
+  my $recipient = $email->header_str('To');
 
   unless($list->accept_posts_from($sender_address) && $list->active) {
     reject($recipient, $sender);
@@ -68,16 +68,16 @@ sub post_message {
   # this thing.
 
   # XXX no MIME or other fancy handling for now -- apeiron, 2010-03-13 
-  my $body = $email->body;
+  my $body = $email->body_str;
   for my $subscriber (keys %{$list->subscribers}) {
     #my $verped_from = Mail::Verp->encode($recipient, $subscriber);
     # XXX we let the MTA create the message-id for us for now -- apeiron,
     # 2010-03-13 
-    my $new_message = Email::Simple->create(
+    my $new_message = Email::MIME->create(
       header => [
         From       => $sender_address,
         To         => $subscriber,
-        Subject    => $email->header('Subject'),
+        Subject    => $email->header_str('Subject'),
         'Reply-to' => $recipient,
       ],
       body => $body,
@@ -91,7 +91,7 @@ sub post_message {
 # XXX make this actually not suck -- apeiron, 2010-03-13 
 sub reject {
   my ($recipient, $sender) = @_;
-  my $email = Email::Simple->create(
+  my $email = Email::MIME->create(
     header => [
       From => $recipient,
       To   => $sender,
@@ -106,7 +106,7 @@ BODY
 
 sub not_subscribed {
   my ($list, $recipient, $sender) = @_;
-  my $email = Email::Simple->create(
+  my $email = Email::MIME->create(
     # XXX need admin address
     header => [
       From => $recipient,
@@ -122,7 +122,7 @@ BODY
 
 sub already_subscribed {
   my ($list, $recipient, $sender) = @_;
-  my $email = Email::Simple->create(
+  my $email = Email::MIME->create(
     header => [
       From => $recipient,
       To   => $sender,

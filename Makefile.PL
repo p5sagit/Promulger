@@ -9,7 +9,7 @@ requires 'App::Cmd';
 requires 'Carp';
 requires 'Config::General';
 requires 'IPC::System::Simple';
-requires 'Email::Simple';
+requires 'Email::MIME';
 requires 'Email::Address';
 requires 'Email::Sender';
 requires 'Fcntl';
