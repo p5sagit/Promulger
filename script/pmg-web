@@ -1,0 +1,9 @@
+#!/usr/bin/env perl
+use strictures 1;
+use autodie;
+
+use Promulger::Web;
+use Promulger::Config;
+Promulger::Config->load_config('etc/pmg.conf');
+
+Promulger::Web->run_if_script;
