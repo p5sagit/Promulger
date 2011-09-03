@@ -16,6 +16,8 @@ sub run {
   my $listname = $args->[0];
   my $list = Promulger::List->new(
     listname  => $listname,
+    active => 1,
+    subscribers => {},
   );
   $list->setup;
 }

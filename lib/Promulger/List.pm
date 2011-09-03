@@ -6,8 +6,9 @@ use Carp;
 use Path::Class;
 use Fcntl ':flock';
 use Tie::File;
-use File::Slurp qw/read_file, write_file/;
+use File::Slurp qw/read_file write_file/;
 use Data::Dumper;
+use Try::Tiny;
 $Data::Dumper::Purity = 1;
 
 use Promulger::Config;
@@ -37,8 +38,10 @@ sub resolve {
   $proto =~ s/-request$//;
   my $path = find_path_for($proto);
   my $maybe_list;
-  eval {
+  try {
     $maybe_list = __PACKAGE__->load($path->stringify);
+  } catch {
+    die "oh noes: $_";
   };
   return $maybe_list;
 }
@@ -119,6 +122,15 @@ sub store {
 sub load {
   my ($class, $path) = @_;
   return do $path;
+}
+
+sub get_lists {
+  my ($self) = @_;
+  my $config = Promulger::Config->config;
+  my @lists = map { $_->basename}
+              grep { -f } dir($config->{list_home})->children;
+  s/\.list//g for @lists;
+  return @lists;
 }
 
 'http://mitpress.mit.edu/sicp/';
