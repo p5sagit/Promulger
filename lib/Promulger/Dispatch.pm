@@ -94,7 +94,7 @@ sub send_message {
   my ($message) = @_;
   my $config = Promulger::Config->config;
   my ($class, $transport);
-  if($class = $config->{transport}) {
+  if($class = $config->{mailer}) {
     if($class !~ /::/) {
       $class = "Email::Sender::Transport::${class}";
     }

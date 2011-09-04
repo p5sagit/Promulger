@@ -8,21 +8,25 @@ all_from 'lib/Promulger.pm';
 requires 'App::Cmd';
 requires 'Carp';
 requires 'Config::General';
-requires 'IPC::System::Simple';
-requires 'Email::MIME';
 requires 'Email::Address';
+requires 'Email::MIME';
 requires 'Email::Sender';
 requires 'Fcntl';
+requires 'File::Slurp';
 requires 'IPC::Run3';
-# requires 'Mail::Verp'; # not yet
+requires 'Method::Signatures::Simple';
 requires 'Moo';
 requires 'Path::Class';
 requires 'Tie::File';
+requires 'Try::Tiny';
+requires 'Web::Simple';
 requires 'autodie';
 requires 'parent';
+requires 'strictures';
 
 install_script (qw|
   script/pmg
+  script/pmg-web
   script/mm2pmg
 |);
 
