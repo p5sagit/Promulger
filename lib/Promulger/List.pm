@@ -9,6 +9,7 @@ use Tie::File;
 use File::Slurp qw/read_file write_file/;
 use Data::Dumper;
 use Try::Tiny;
+use FindBin qw($Bin);
 $Data::Dumper::Purity = 1;
 
 use Promulger::Config;
@@ -84,7 +85,7 @@ sub setup {
       croak "${list_alias} already in $config->{aliases}";
     }
     push @aliases, 
-      qq(${list_alias}: "|$config->{bin_root}/pmg msg -c $config->{config_file}"\n);
+      qq(${list_alias}: "|$Bin msg -c $config->{config_file}"\n);
   }
 
   $self->store($path->stringify);

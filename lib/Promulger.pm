@@ -15,7 +15,6 @@ Promulger -- Simple, Unixy mailing list manager
   # In a config file somewhere:
   aliases = /path/to/etc/aliases
   list_home = /path/your/mta/can/write/to/lists
-  bin_root = /path/to/pmg/bin # like /usr/local/bin
 
   # then
   /path/to/pmg/bin/pmg -c /path/to/config/pmg.conf newlist mylist
