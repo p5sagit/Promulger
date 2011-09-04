@@ -76,7 +76,8 @@ sub setup {
   croak "${name} already a known list" if $self->resolve($name);
   my $path = find_path_for($name);
 
-  my $tie = tie my @aliases, 'Tie::File', $config->{aliases};
+  my $tie = tie my @aliases, 'Tie::File', $config->{aliases} 
+    or die "cannot tie " . $config->{aliases} . ": $!";
   $tie->flock;
   my @list_aliases = ($name, "${name}-request");
 
