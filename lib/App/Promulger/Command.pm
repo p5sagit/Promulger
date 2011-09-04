@@ -6,15 +6,9 @@ use App::Cmd::Setup -command;
 
 use Promulger::Config;
 
-sub opt_spec {
-  return (
-    [ "config|c=s", "configuration file", { required => 1 } ],
-  );
-}
-
 sub validate_args {
   my ($self, $opt, $args) = @_;
-  my $cf = $opt->{config};
+  my $cf = $self->app->global_options->{config};
 
   unless(-e $cf) {
     die "Config file $cf doesn't exist\n";

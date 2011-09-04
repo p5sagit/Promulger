@@ -43,7 +43,7 @@ sub dispatch_request {
       [ $self->show_subscriber($list, $subscriber) ] 
     ]
   },
-  sub (GET + /list/*/subscriber/*/unsubscribe) {
+  sub (POST + /list/*/subscriber/*/unsubscribe) {
     my ($self, $list, $subscriber) = @_;
     [ 
       200, 
@@ -116,7 +116,9 @@ method unsubscribe($list_name, $email) {
 method show_subscriber($list_name, $subscriber) {
   my $html = <<"HTML";
 <p>Subscriber ${subscriber}</p>
-<a href="/list/${list_name}/subscriber/${subscriber}/unsubscribe">unsubscribe</a>
+<form method="POST" action="/list/${list_name}/subscriber/${subscriber}/unsubscribe">
+<input type="submit" value="Unsubscribe">
+</form>
 HTML
 }
 
