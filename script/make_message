@@ -1,0 +1,20 @@
+#!/usr/bin/perl
+use strict;
+use warnings;
+
+use Email::MIME;
+use File::Slurp 'read_file';
+
+my ($from, $to, $subject) = @ARGV;
+my $body = read_file \*STDIN;
+
+
+my $email = Email::MIME->create(
+  header => [
+    From => $from,
+    To   => $to,
+    Subject => $subject,
+  ],
+  body => $body,
+);
+print $email->as_string;
