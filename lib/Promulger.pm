@@ -18,14 +18,14 @@ Promulger -- Simple, Unixy mailing list manager
   bin_root = /path/to/pmg/bin # like /usr/local/bin
 
   # then
-  /path/to/pmg/bin/pmg newlist -c /path/to/config/pmg.conf mylist
+  /path/to/pmg/bin/pmg -c /path/to/config/pmg.conf newlist mylist
 
   # then
   mail -s subscribe mylist-request@yourhost < /dev/null
   mail -s post mylist@yourhost < first_post
 
   # cleanup
-  /path/to/pmg/bin/pmg rmlist -c /path/to/config/pmg.conf rmlist
+  /path/to/pmg/bin/pmg -c /path/to/config/pmg.conf rmlist mylist
 
 =head1 DESCRIPTION
 
