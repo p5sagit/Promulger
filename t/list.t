@@ -78,6 +78,21 @@ CONFIG
   );
 
   lives_ok { $list->subscribe('foo@example.com') } "can subscribe someone";
+  $list = List->resolve('foo');
+  cmp_deeply(
+    $list->subscribers,
+    {
+      'foo@example.com' => 1,
+    },
+    "subscribing a user adds them to the serialized data",
+  );
+  lives_ok { $list->unsubscribe('foo@example.com') } "can unsubscribe someone";
+  $list = List->resolve('foo');
+  cmp_deeply(
+    $list->subscribers,
+    { },
+    "unsubscribing a user removes them from the serialized data",
+  );
 }
 
 done_testing;
