@@ -16,7 +16,7 @@ sub run {
     local $/;
     <STDIN>
   };
-  Promulger::Dispatch::dispatch($message);
+  Promulger::Dispatch->new->dispatch($message);
 }
 
 'Engage';

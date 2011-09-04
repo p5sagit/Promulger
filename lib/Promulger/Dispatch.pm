@@ -1,72 +1,87 @@
 package Promulger::Dispatch;
-use strict;
-use warnings;
+use Moo;
+use Method::Signatures::Simple;
+use autodie ':all';
+use Scalar::Util 'blessed';
 
 use Email::Address;
 use Email::MIME;
-# XXX allow the user to specify their own Email::Sender::Transport -- apeiron,
-# 2010-03-13 
-use Email::Sender::Simple qw(sendmail);
+use Email::Sender::Simple ();
 # XXX not yet -- apeiron, 2010-06-25 
 #use Mail::Verp;
 
 use Promulger::Config;
 
+has transport => (
+  is => 'rw',
+  isa => sub {
+    my $proto = $_[0];
+    blessed $proto and
+    $proto->can('does') and
+    $proto->does('Email::Sender::Transport') 
+      or die "transport must do Email::Sender::Transport role";
+  },
+  default => sub {
+    my $config = Promulger::Config->config;
+    my $class;
+    if($class = $config->{mailer}) {
+      if($class !~ /::/) {
+        $class = "Email::Sender::Transport::${class}";
+      }
+    } else {
+      $class = 'Email::Sender::Transport::Sendmail';
+    }
+    Class::MOP::load_class($class);
+    $class->new;
+  },
+);
+
 # XXX no bounce parsing yet -- apeiron, 2010-03-13 
-sub dispatch {
-  my ($message) = @_;
+method dispatch ($message) {
   my $config = Promulger::Config->config;
 
   my $email = Email::MIME->new($message);
   my $recipient = $email->header('To');
-  my $local_user = user_for_address($recipient);
+  my $local_user = $self->user_for_address($recipient);
   my $sender = $email->header('From');
   my $subject = $email->header('Subject');
 
   my $list = Promulger::List->resolve($local_user);
   unless($list) {
-    reject($recipient, $sender);
+    $self->reject($recipient, $sender);
     return;
   }
 
   if($local_user =~ /-request$/) {
-    handle_request($list, $sender, $local_user, $subject, $config);
+    $self->handle_request($list, $sender, $local_user, $subject, $config);
     return;
   }
 
   # they don't have a request for us, so they want to post a message
-  post_message($list, $email, $config);
+  $self->post_message($list, $email, $config);
   return;
 }
 
-sub handle_request {
-  my ($list, $sender, $recipient, $subject) = @_;
-
-  my $sender_address = bare_address($sender);
+method handle_request ($list, $sender, $recipient, $subject) {
+  my $sender_address = $self->bare_address($sender);
   if($subject =~ /^\s*subscribe/i) {
-    print "going to subscribe $sender to " . $list->listname . "\n";
     $list->subscribe($sender_address) 
-      or already_subscribed($list, $recipient, $sender_address);
+      or $self->already_subscribed($list, $recipient, $sender_address);
   } elsif($subject =~ /^\s*unsubscribe/i) {
     $list->unsubscribe($sender_address) 
-      or not_subscribed($list, $recipient, $sender_address);
+      or $self->not_subscribed($list, $recipient, $sender_address);
   }
 }
 
-sub post_message {
-  my ($list, $email, $config) = @_;
-
+method post_message ($list, $email, $config) {
   my $sender = $email->header('From');
-  my $sender_address = bare_address($sender);
+  my $sender_address = $self->bare_address($sender);
   my $recipient = $email->header('To');
 
   unless($list->accept_posts_from($sender_address) && $list->active) {
-    reject($recipient, $sender);
+    $self->reject($recipient, $sender);
     return;
   }
-
-  # they're allowed to post (subscribed or not), the list is active. let's do
-  # this thing.
 
   # XXX no MIME or other fancy handling for now -- apeiron, 2010-03-13 
   my $body = $email->body_str;
@@ -86,34 +101,21 @@ sub post_message {
     );
     # XXX no queuing or job distribution for now beyond what the MTA provides
     # -- apeiron, 2010-03-13 
-    send_message($new_message);
+    $self->send_message($new_message);
   }
 }
 
-sub send_message {
-  my ($message) = @_;
-  my $config = Promulger::Config->config;
-  my ($class, $transport);
-  if($class = $config->{mailer}) {
-    if($class !~ /::/) {
-      $class = "Email::Sender::Transport::${class}";
-    }
-  } else {
-    $class = 'Email::Sender::Transport::Sendmail';
-  }
-  Class::MOP::load_class($class);
-  $transport = $class->new;
-  sendmail(
+method send_message ($message) {
+  Email::Sender::Simple::sendmail(
     $message,
     {
-      transport => $transport,
+      transport => $self->transport,
     }
   );
 }
 
 # XXX make this actually not suck -- apeiron, 2010-03-13 
-sub reject {
-  my ($recipient, $sender) = @_;
+method reject ($recipient, $sender) {
   my $email = Email::MIME->create(
     header => [
       From => $recipient,
@@ -124,11 +126,10 @@ sub reject {
 Sorry, your message to $recipient has been denied.
 BODY
   );
-  send_message($email);
+  $self->send_message($email);
 }
 
-sub not_subscribed {
-  my ($list, $recipient, $sender) = @_;
+method not_subscribed ($list, $recipient, $sender) {
   my $email = Email::MIME->create(
     # XXX need admin address
     header => [
@@ -140,11 +141,10 @@ sub not_subscribed {
 Sorry, you are not subscribed to $list.
 BODY
   );
-  send_message($email);
+  $self->send_message($email);
 }
 
-sub already_subscribed {
-  my ($list, $recipient, $sender) = @_;
+method already_subscribed ($list, $recipient, $sender) {
   my $email = Email::MIME->create(
     header => [
       From => $recipient,
@@ -155,17 +155,15 @@ sub already_subscribed {
 Sorry, you are already subscribed to $list.
 BODY
   );
-  send_message($email);
+  $self->send_message($email);
 }
 
-sub bare_address {
-  my ($full_addr) = @_;
+method bare_address ($full_addr) {
   my ($addr_obj) = Email::Address->parse($full_addr);
   return $addr_obj->address;
 }
 
-sub user_for_address {
-  my ($full_addr) = @_;
+method user_for_address ($full_addr) {
   my ($addr_obj) = Email::Address->parse($full_addr);
   return $addr_obj->user;
 }
