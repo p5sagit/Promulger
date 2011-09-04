@@ -18,10 +18,10 @@ sub dispatch {
   my $config = Promulger::Config->config;
 
   my $email = Email::MIME->new($message);
-  my $recipient = $email->header_str('To');
+  my $recipient = $email->header('To');
   my $local_user = user_for_address($recipient);
-  my $sender = $email->header_str('From');
-  my $subject = $email->header_str('Subject');
+  my $sender = $email->header('From');
+  my $subject = $email->header('Subject');
 
   my $list = Promulger::List->resolve($local_user);
   unless($list) {
@@ -44,6 +44,7 @@ sub handle_request {
 
   my $sender_address = bare_address($sender);
   if($subject =~ /^\s*subscribe/i) {
+    print "going to subscribe $sender to " . $list->listname . "\n";
     $list->subscribe($sender_address) 
       or already_subscribed($list, $recipient, $sender_address);
   } elsif($subject =~ /^\s*unsubscribe/i) {
@@ -55,9 +56,9 @@ sub handle_request {
 sub post_message {
   my ($list, $email, $config) = @_;
 
-  my $sender = $email->header_str('From');
+  my $sender = $email->header('From');
   my $sender_address = bare_address($sender);
-  my $recipient = $email->header_str('To');
+  my $recipient = $email->header('To');
 
   unless($list->accept_posts_from($sender_address) && $list->active) {
     reject($recipient, $sender);
@@ -70,22 +71,44 @@ sub post_message {
   # XXX no MIME or other fancy handling for now -- apeiron, 2010-03-13 
   my $body = $email->body_str;
   for my $subscriber (keys %{$list->subscribers}) {
-    #my $verped_from = Mail::Verp->encode($recipient, $subscriber);
+    # my $verped_from = Mail::Verp->encode($recipient, $subscriber);
+
     # XXX we let the MTA create the message-id for us for now -- apeiron,
     # 2010-03-13 
     my $new_message = Email::MIME->create(
       header => [
         From       => $sender_address,
         To         => $subscriber,
-        Subject    => $email->header_str('Subject'),
+        Subject    => $email->header('Subject'),
         'Reply-to' => $recipient,
       ],
       body => $body,
     );
     # XXX no queuing or job distribution for now beyond what the MTA provides
     # -- apeiron, 2010-03-13 
-    sendmail($new_message);
+    send_message($new_message);
   }
+}
+
+sub send_message {
+  my ($message) = @_;
+  my $config = Promulger::Config->config;
+  my ($class, $transport);
+  if($class = $config->{transport}) {
+    if($class !~ /::/) {
+      $class = "Email::Sender::Transport::${class}";
+    }
+  } else {
+    $class = 'Email::Sender::Transport::Sendmail';
+  }
+  Class::MOP::load_class($class);
+  $transport = $class->new;
+  sendmail(
+    $message,
+    {
+      transport => $transport,
+    }
+  );
 }
 
 # XXX make this actually not suck -- apeiron, 2010-03-13 
@@ -101,7 +124,7 @@ sub reject {
 Sorry, your message to $recipient has been denied.
 BODY
   );
-  sendmail($email);
+  send_message($email);
 }
 
 sub not_subscribed {
@@ -117,7 +140,7 @@ sub not_subscribed {
 Sorry, you are not subscribed to $list.
 BODY
   );
-  sendmail($email);
+  send_message($email);
 }
 
 sub already_subscribed {
@@ -132,7 +155,7 @@ sub already_subscribed {
 Sorry, you are already subscribed to $list.
 BODY
   );
-  sendmail($email);
+  send_message($email);
 }
 
 sub bare_address {
