@@ -20,6 +20,7 @@ requires 'Path::Class';
 requires 'Tie::File';
 requires 'Try::Tiny';
 requires 'Web::Simple';
+
 requires 'autodie';
 requires 'parent';
 requires 'strictures';
