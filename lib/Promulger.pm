@@ -1,6 +1,6 @@
 package Promulger;
-use strict;
-use warnings;
+use strictures 1;
+use autodie;
 
 our $VERSION = '0.000001'; # 0.0.1
 

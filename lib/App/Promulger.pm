@@ -1,6 +1,6 @@
 package App::Promulger;
-use strict;
-use warnings;
+use strictures 1;
+use autodie;
 
 use App::Cmd::Setup -app;
 

@@ -1,6 +1,6 @@
 package App::Promulger::Command::msg;
-use strict;
-use warnings;
+use strictures 1;
+use autodie;
 
 use App::Promulger -command;
 use parent 'App::Promulger::Command';

@@ -1,6 +1,6 @@
 package App::Promulger::Command::newlist;
-use strict;
-use warnings;
+use strictures 1;
+use autodie;
 
 use App::Promulger -command;
 use Promulger::List;

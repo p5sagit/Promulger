@@ -1,4 +1,5 @@
 use strictures 1;
+use autodie;
 use Test::Most;
 
 use_ok('Promulger');

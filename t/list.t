@@ -1,10 +1,10 @@
 #!/usr/bin/perl
 use strictures 1;
 use autodie;
+use Test::Most;
 
 use File::Temp ();
 use Path::Class;
-use Test::Most;
 
 use aliased 'Promulger::List';
 # no alias here so we don't risk colliding with perl's own Config.pm -- apeiron,

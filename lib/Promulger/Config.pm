@@ -1,6 +1,6 @@
 package Promulger::Config;
-use strict;
-use warnings;
+use strictures 1;
+use autodie;
 
 use Config::General;
 

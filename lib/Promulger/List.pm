@@ -1,5 +1,6 @@
 package Promulger::List;
 use Moo;
+use autodie;
 
 use autodie ':all';
 use Carp;
