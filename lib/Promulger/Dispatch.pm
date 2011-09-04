@@ -2,6 +2,7 @@ package Promulger::Dispatch;
 use Moo;
 use Method::Signatures::Simple;
 use autodie ':all';
+use Scalar::Util 'blessed';
 
 use Email::Address;
 use Email::MIME;
@@ -21,7 +22,17 @@ has transport => (
       or die "transport must do Email::Sender::Transport role";
   },
   default => sub {
-    Email::Sender::Transport::Sendmail->new
+    my $config = Promulger::Config->config;
+    my $class;
+    if($class = $config->{mailer}) {
+      if($class !~ /::/) {
+        $class = "Email::Sender::Transport::${class}";
+      }
+    } else {
+      $class = 'Email::Sender::Transport::Sendmail';
+    }
+    Class::MOP::load_class($class);
+    $class->new;
   },
 );
 
@@ -95,17 +106,6 @@ method post_message ($list, $email, $config) {
 }
 
 method send_message ($message) {
-  my $config = Promulger::Config->config;
-  my ($class, $transport);
-  if($class = $config->{mailer}) {
-    if($class !~ /::/) {
-      $class = "Email::Sender::Transport::${class}";
-    }
-  } else {
-    $class = 'Email::Sender::Transport::Sendmail';
-  }
-  Class::MOP::load_class($class);
-  $transport = $class->new;
   Email::Sender::Simple::sendmail(
     $message,
     {
