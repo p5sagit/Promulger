@@ -35,12 +35,12 @@ sub dispatch_request {
     my ($self, $list) = @_;
     [ 200, [ 'Content-type', 'text/html' ], [ $self->show_list($list) ] ]
   },
-  sub (GET + /list/*/subscriber/*) {
-    my ($self, $list, $subscriber) = @_;
+  sub (GET + /list/*/subscriber/* + .*) {
+    my ($self, $list, $subscriber, $extension) = @_;
     [ 
       200, 
       [ 'Content-type', 'text/html' ], 
-      [ $self->show_subscriber($list, $subscriber) ] 
+      [ $self->show_subscriber($list, $subscriber, $extension) ] 
     ]
   },
   sub (POST + /list/*/subscriber/*/unsubscribe) {
@@ -113,10 +113,11 @@ method unsubscribe($list_name, $email) {
   return "<p>Unsubscribed ${email} from ${list_name}.</p>";
 }
 
-method show_subscriber($list_name, $subscriber) {
+method show_subscriber($list_name, $subscriber, $extension) {
+  my $address = "${subscriber}.${extension}";
   my $html = <<"HTML";
-<p>Subscriber ${subscriber}</p>
-<form method="POST" action="/list/${list_name}/subscriber/${subscriber}/unsubscribe">
+<p>Subscriber ${address}</p>
+<form method="POST" action="/list/${list_name}/subscriber/${address}/unsubscribe">
 <input type="submit" value="Unsubscribe">
 </form>
 HTML
