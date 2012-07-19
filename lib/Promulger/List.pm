@@ -38,6 +38,7 @@ has subscribers => (
 sub resolve {
   my ($self, $proto) = @_;
   $proto =~ s/-request$//;
+  $proto =~ s/^owner-//;
   my $path = find_path_for($proto);
   my $maybe_list;
   try {
@@ -82,12 +83,15 @@ sub setup {
   $tie->flock;
   my @list_aliases = ($name, "${name}-request");
 
+  # XXX add a flag to determine whether to write the aliases file or no
+  # -- apeiron, 2012-07-18
   for my $list_alias (@list_aliases) {
     if(grep { /^${list_alias}:/ } @aliases) {
       croak "${list_alias} already in $config->{aliases}";
     }
     push @aliases, 
-      qq(${list_alias}: "|$Bin msg -c $config->{config_file}"\n);
+      qq(${list_alias}: "|$Bin msg -c $config->{config_file}"\n),
+      qq(${list_alias}-owner: "|$Bin msgbounce -c $config->{config_file}"\n);
   }
 
   $self->store($path->stringify);

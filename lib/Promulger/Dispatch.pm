@@ -2,6 +2,7 @@ package Promulger::Dispatch;
 use Moo;
 use autodie ':all';
 use Scalar::Util 'blessed';
+use Try::Tiny;
 
 use Email::Address;
 use Email::MIME;
@@ -10,6 +11,7 @@ use Email::Sender::Simple ();
 #use Mail::Verp;
 
 use Promulger::Config;
+use Promulger::List;
 
 has transport => (
   is => 'rw',
@@ -35,7 +37,6 @@ has transport => (
   },
 );
 
-# XXX no bounce parsing yet -- apeiron, 2010-03-13 
 sub dispatch {
   my ($self, $message) = @_;
   my $config = Promulger::Config->config;
@@ -71,6 +72,37 @@ sub handle_request {
   } elsif($subject =~ /^\s*unsubscribe/i) {
     $list->unsubscribe($sender_address) 
       or $self->not_subscribed($list, $recipient, $sender_address);
+  }
+}
+
+# XXX this needs to be better -- apeiron, 2012-07-18 
+sub handle_bounce {
+  my ($self, $raw_message) = @_;
+  my $message = Email::MIME->new($raw_message);
+  require Mail::DeliveryStatus::BounceParser;
+  my $bounce;
+  my $recipient = $message->header('To');
+  my $recipient_address = Email::Address->parse($recipient);
+  try {
+    my $bounce = Mail::DeliveryStatus::BounceParser->new($message);
+  } catch {
+    my $domain = $recipient_address->host;
+    my $redirect = Email::MIME->create(
+      header_str => [
+        From => $message->header('From'),
+        To   => "postmaster@${domain}",
+        Subject => $message->header('Subject'),
+      ],
+      body_str => $message->body_str,
+    );
+    $self->send_message($redirect);
+  };
+  my @addresses = $bounce->addresses;
+  my $list = Promulger::List->resolve($recipient_address->address);
+  for my $addr (@addresses) {
+    my $a = Email::Address->parse($addr);
+    my $raw_address = $a->address;
+    $list->unsubscribe($raw_address);
   }
 }
 
