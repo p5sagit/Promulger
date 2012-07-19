@@ -1,1 +1,10 @@
-fgrep -r XXX lib
+The TODO list for this project is stored in the sd database which lives
+in the source repository. The quick route to interacting with the issue
+tracker is the following:
+
+$ cpanm App::SD
+# make some tea/coffee
+$ export SD_REPO=$(pwd)/pmgsd.sd
+$ sd ticket list
+
+For more details, see http://syncwith.us/ .

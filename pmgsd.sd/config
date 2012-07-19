@@ -1,0 +1,6 @@
+[core]
+	config-format-version = 0
+[replica "file:///usr/home/apeiron/code/perl/pmg/pmgsd.sd"]
+	uuid = 23721af0-d47c-4016-b4df-c4d1075837c8
+[user]
+	email-address = apeiron@cpan.org
