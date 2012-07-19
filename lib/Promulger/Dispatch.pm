@@ -1,6 +1,5 @@
 package Promulger::Dispatch;
 use Moo;
-use Method::Signatures::Simple;
 use autodie ':all';
 use Scalar::Util 'blessed';
 
@@ -37,7 +36,8 @@ has transport => (
 );
 
 # XXX no bounce parsing yet -- apeiron, 2010-03-13 
-method dispatch ($message) {
+sub dispatch {
+  my ($self, $message) = @_;
   my $config = Promulger::Config->config;
 
   my $email = Email::MIME->new($message);
@@ -62,7 +62,8 @@ method dispatch ($message) {
   return;
 }
 
-method handle_request ($list, $sender, $recipient, $subject) {
+sub handle_request {
+  my ($self, $list, $sender, $recipient, $subject) = @_;
   my $sender_address = $self->bare_address($sender);
   if($subject =~ /^\s*subscribe/i) {
     $list->subscribe($sender_address) 
@@ -73,7 +74,8 @@ method handle_request ($list, $sender, $recipient, $subject) {
   }
 }
 
-method post_message ($list, $email, $config) {
+sub post_message {
+  my ($self, $list, $email, $config) = @_;
   my $sender = $email->header('From');
   my $sender_address = $self->bare_address($sender);
   my $recipient = $email->header('To');
@@ -105,7 +107,8 @@ method post_message ($list, $email, $config) {
   }
 }
 
-method send_message ($message) {
+sub send_message {
+  my ($self, $message) = @_;
   Email::Sender::Simple::sendmail(
     $message,
     {
@@ -115,7 +118,8 @@ method send_message ($message) {
 }
 
 # XXX make this actually not suck -- apeiron, 2010-03-13 
-method reject ($recipient, $sender) {
+sub reject {
+  my ($self, $recipient, $sender) = @_;
   my $email = Email::MIME->create(
     header => [
       From => $recipient,
@@ -129,7 +133,8 @@ BODY
   $self->send_message($email);
 }
 
-method not_subscribed ($list, $recipient, $sender) {
+sub not_subscribed {
+  my ($self, $list, $recipient, $sender) = @_;
   my $email = Email::MIME->create(
     # XXX need admin address
     header => [
@@ -144,7 +149,8 @@ BODY
   $self->send_message($email);
 }
 
-method already_subscribed ($list, $recipient, $sender) {
+sub already_subscribed {
+  my ($self, $list, $recipient, $sender) = @_;
   my $email = Email::MIME->create(
     header => [
       From => $recipient,
@@ -158,12 +164,14 @@ BODY
   $self->send_message($email);
 }
 
-method bare_address ($full_addr) {
+sub bare_address {
+  my ($self, $full_addr) = @_;
   my ($addr_obj) = Email::Address->parse($full_addr);
   return $addr_obj->address;
 }
 
-method user_for_address ($full_addr) {
+sub user_for_address {
+  my ($self, $full_addr) = @_;
   my ($addr_obj) = Email::Address->parse($full_addr);
   return $addr_obj->user;
 }

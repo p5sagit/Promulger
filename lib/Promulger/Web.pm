@@ -4,8 +4,6 @@ use autodie;
 
 use Promulger::List;
 
-use Method::Signatures::Simple;
-
 has list_home => (
   is => 'ro',
   default => sub { 'etc/lists' },
@@ -64,7 +62,7 @@ sub dispatch_request {
   }
 }
 
-method render_index {
+sub render_index {
   my ($self) = @_;
   my @lists = Promulger::List->get_lists;
   my $html = <<HTML;
@@ -80,7 +78,8 @@ HTML
   return $html;
 }
 
-method show_list($list_name) {
+sub show_list {
+  my ($self, $list_name) = @_;
   my $list = Promulger::List->resolve($list_name);
   my $name = $list->listname;
   my $active = $list->active;
@@ -101,19 +100,22 @@ HTML
   return $html;
 }
 
-method subscribe($list_name, $email) {
+sub subscribe {
+  my ($self, $list_name, $email) = @_;
   my $list = Promulger::List->resolve($list_name);
   $list->subscribe($email);
   return "<p>Subscribed ${email} to ${list_name}.</p>";
 }
 
-method unsubscribe($list_name, $email) {
+sub unsubscribe {
+  my ($self, $list_name, $email) = @_;
   my $list = Promulger::List->resolve($list_name);
   $list->unsubscribe($email);
   return "<p>Unsubscribed ${email} from ${list_name}.</p>";
 }
 
-method show_subscriber($list_name, $subscriber, $extension) {
+sub show_subscriber {
+  my ($self, $list_name, $subscriber, $extension) = @_;
   my $address = "${subscriber}.${extension}";
   my $html = <<"HTML";
 <p>Subscriber ${address}</p>

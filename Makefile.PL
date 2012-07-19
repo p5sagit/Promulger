@@ -14,7 +14,6 @@ requires 'Email::Sender';
 requires 'Fcntl';
 requires 'File::Slurp';
 requires 'IPC::Run3';
-requires 'Method::Signatures::Simple';
 requires 'Moo';
 requires 'Path::Class';
 requires 'Tie::File';
